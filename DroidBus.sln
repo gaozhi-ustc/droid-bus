@@ -1,0 +1,43 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{1DE2E68B-108D-4FC4-ACD0-719D569C96FD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DroidBus.Core", "src\DroidBus.Core\DroidBus.Core.csproj", "{93ED5CFC-C1C3-493A-96CF-0F0FDB5FD118}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DroidBus.App", "src\DroidBus.App\DroidBus.App.csproj", "{744355F0-BE37-4BE4-9645-F35B13BBE07D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{92A98A42-9ADC-44CA-B126-9388B387F4AA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DroidBus.Core.Tests", "tests\DroidBus.Core.Tests\DroidBus.Core.Tests.csproj", "{E582E284-DEF3-4094-BAB4-81ADB01889E3}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{93ED5CFC-C1C3-493A-96CF-0F0FDB5FD118}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{93ED5CFC-C1C3-493A-96CF-0F0FDB5FD118}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{93ED5CFC-C1C3-493A-96CF-0F0FDB5FD118}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{93ED5CFC-C1C3-493A-96CF-0F0FDB5FD118}.Release|Any CPU.Build.0 = Release|Any CPU
+		{744355F0-BE37-4BE4-9645-F35B13BBE07D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{744355F0-BE37-4BE4-9645-F35B13BBE07D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{744355F0-BE37-4BE4-9645-F35B13BBE07D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{744355F0-BE37-4BE4-9645-F35B13BBE07D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E582E284-DEF3-4094-BAB4-81ADB01889E3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E582E284-DEF3-4094-BAB4-81ADB01889E3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E582E284-DEF3-4094-BAB4-81ADB01889E3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E582E284-DEF3-4094-BAB4-81ADB01889E3}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{93ED5CFC-C1C3-493A-96CF-0F0FDB5FD118} = {1DE2E68B-108D-4FC4-ACD0-719D569C96FD}
+		{744355F0-BE37-4BE4-9645-F35B13BBE07D} = {1DE2E68B-108D-4FC4-ACD0-719D569C96FD}
+		{E582E284-DEF3-4094-BAB4-81ADB01889E3} = {92A98A42-9ADC-44CA-B126-9388B387F4AA}
+	EndGlobalSection
+EndGlobal

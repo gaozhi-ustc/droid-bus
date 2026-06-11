@@ -1,0 +1,12 @@
+# 可视化 brainstorming 临时文件
+.superpowers/
+
+# 截图（PNG 一律不提交）
+*.png
+
+# .NET build artifacts
+bin/
+obj/
+
+# Per-user IDE files
+*.user
