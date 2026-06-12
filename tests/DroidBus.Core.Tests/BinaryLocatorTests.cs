@@ -5,18 +5,21 @@ namespace DroidBus.Core.Tests;
 
 public class BinaryLocatorTests
 {
+    private static string Adb => BinaryLocator.ExeName("adb");
+    private static string Scrcpy => BinaryLocator.ExeName("scrcpy");
+
     [Fact]
     public void Locates_tools_in_given_dir()
     {
         var dir = Path.Combine(Path.GetTempPath(), "dbtools_" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(dir);
-        foreach (var f in new[] { "adb.exe", "scrcpy.exe", "scrcpy-server", "sndcpy.apk", "Adbkeyboard.apk" })
+        foreach (var f in new[] { Adb, Scrcpy, "scrcpy-server", "sndcpy.apk", "Adbkeyboard.apk" })
             File.WriteAllText(Path.Combine(dir, f), "x");
 
         var locator = BinaryLocator.FromDirectory(dir);
 
-        locator.Adb.Should().Be(Path.Combine(dir, "adb.exe"));
-        locator.Scrcpy.Should().Be(Path.Combine(dir, "scrcpy.exe"));
+        locator.Adb.Should().Be(Path.Combine(dir, Adb));
+        locator.Scrcpy.Should().Be(Path.Combine(dir, Scrcpy));
         locator.SndcpyApk.Should().Be(Path.Combine(dir, "sndcpy.apk"));
         Directory.Delete(dir, true);
     }
@@ -27,7 +30,7 @@ public class BinaryLocatorTests
         var dir = Path.Combine(Path.GetTempPath(), "dbtools_" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(dir);
         var act = () => BinaryLocator.FromDirectory(dir);
-        act.Should().Throw<FileNotFoundException>().WithMessage("*adb.exe*");
+        act.Should().Throw<FileNotFoundException>().WithMessage($"*{Adb}*");
         Directory.Delete(dir, true);
     }
 
@@ -37,7 +40,7 @@ public class BinaryLocatorTests
         var parent = Path.Combine(Path.GetTempPath(), "dbtools_" + Guid.NewGuid().ToString("N"));
         var res = Path.Combine(parent, "Resources");
         Directory.CreateDirectory(res);
-        foreach (var f in new[] { "adb.exe", "scrcpy.exe", "scrcpy-server", "Adbkeyboard.apk" })
+        foreach (var f in new[] { Adb, Scrcpy, "scrcpy-server", "Adbkeyboard.apk" })
             File.WriteAllText(Path.Combine(res, f), "x");
         File.WriteAllText(Path.Combine(parent, "sndcpy.apk"), "x"); // 仅父目录有
 
@@ -45,5 +48,66 @@ public class BinaryLocatorTests
 
         locator.SndcpyApk.Should().Be(Path.Combine(parent, "sndcpy.apk"));
         Directory.Delete(parent, true);
+    }
+
+    [Fact]
+    public void Rid_is_one_of_the_four_targets()
+    {
+        BinaryLocator.Rid.Should().BeOneOf("win-x64", "linux-x64", "osx-x64", "osx-arm64");
+    }
+
+    [Fact]
+    public void ExeName_appends_exe_only_on_windows()
+    {
+        var expected = OperatingSystem.IsWindows() ? "adb.exe" : "adb";
+        BinaryLocator.ExeName("adb").Should().Be(expected);
+    }
+
+    [Fact]
+    public void Discover_resolves_tools_via_DROIDBUS_TOOLS_env()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "dbtools_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        foreach (var f in new[] { Adb, Scrcpy, "scrcpy-server" })
+            File.WriteAllText(Path.Combine(dir, f), "x");
+
+        var prev = Environment.GetEnvironmentVariable("DROIDBUS_TOOLS");
+        try
+        {
+            Environment.SetEnvironmentVariable("DROIDBUS_TOOLS", dir);
+            var locator = BinaryLocator.Discover();
+            locator.Adb.Should().Be(Path.Combine(dir, Adb));
+            locator.Scrcpy.Should().Be(Path.Combine(dir, Scrcpy));
+            locator.ScrcpyServer.Should().Be(Path.Combine(dir, "scrcpy-server"));
+            // apk 缺失不抛,给出期望路径(位于工具目录下)。
+            locator.SndcpyApk.Should().Be(Path.Combine(dir, "sndcpy.apk"));
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("DROIDBUS_TOOLS", prev);
+            Directory.Delete(dir, true);
+        }
+    }
+
+    [Fact]
+    public void Discover_throws_helpful_error_when_adb_absent()
+    {
+        var empty = Path.Combine(Path.GetTempPath(), "dbtools_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(empty);
+        var prevTools = Environment.GetEnvironmentVariable("DROIDBUS_TOOLS");
+        var prevPath = Environment.GetEnvironmentVariable("PATH");
+        try
+        {
+            Environment.SetEnvironmentVariable("DROIDBUS_TOOLS", empty);
+            Environment.SetEnvironmentVariable("PATH", empty); // 确保 PATH 里也没有 adb
+            var act = () => BinaryLocator.Discover();
+            act.Should().Throw<FileNotFoundException>().WithMessage("*adb*");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("DROIDBUS_TOOLS", prevTools);
+            Environment.SetEnvironmentVariable("PATH", prevPath);
+            Directory.Delete(empty, true);
+        }
     }
 }

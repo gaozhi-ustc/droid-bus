@@ -12,11 +12,18 @@ public class StreamingProcessTests
     {
         var ct = new CancellationTokenSource(TimeSpan.FromSeconds(20)).Token;
         var factory = new StreamingProcessFactory();
-        await using var p = factory.Start("powershell", new[]
-        {
-            "-NoProfile", "-Command",
-            "while($l=[Console]::In.ReadLine()){[Console]::Out.WriteLine('echo:'+$l)}"
-        });
+        // 跨平台 line-echo:Windows 用 powershell,其余用 sh 读循环。
+        var (exe, args) = OperatingSystem.IsWindows()
+            ? ("powershell", new[]
+            {
+                "-NoProfile", "-Command",
+                "while($l=[Console]::In.ReadLine()){[Console]::Out.WriteLine('echo:'+$l)}"
+            })
+            : ("/bin/sh", new[]
+            {
+                "-c", "while IFS= read -r l; do echo \"echo:$l\"; done"
+            });
+        await using var p = factory.Start(exe, args);
 
         await p.WriteLineAsync("hello", ct);
         var line = await p.ReadLineAsync(ct);

@@ -9,7 +9,10 @@ public class ProcessRunnerTests
     public async Task Runs_process_and_captures_stdout()
     {
         var runner = new ProcessRunner();
-        var result = await runner.RunAsync("cmd.exe", new[] { "/c", "echo", "hello" });
+        var (exe, args) = OperatingSystem.IsWindows()
+            ? ("cmd.exe", new[] { "/c", "echo", "hello" })
+            : ("/bin/sh", new[] { "-c", "echo hello" });
+        var result = await runner.RunAsync(exe, args);
         result.ExitCode.Should().Be(0);
         result.StdOut.Trim().Should().Be("hello");
     }

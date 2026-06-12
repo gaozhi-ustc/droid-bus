@@ -42,11 +42,12 @@ public class ScrcpyArgsBuilderTests
     [Fact]
     public void Toggles_add_flags()
     {
+        var recDir = Path.Combine(Path.GetTempPath(), "rec");
         var o = new MirrorOptions
         {
             TurnScreenOff = true, StayAwake = true, ShowTouches = true,
             LockOrientation = 0, BitRateMbps = 8, MaxSize = 1280,
-            Record = true, RecordDir = @"C:\rec"
+            Record = true, RecordDir = recDir
         };
         var args = ScrcpyArgsBuilder.Build("S1", o);
         args.Should().Contain("--turn-screen-off");
@@ -56,7 +57,8 @@ public class ScrcpyArgsBuilderTests
         args.Should().Contain("0");
         args.Should().Contain("8M");
         args.Should().Contain("1280");
-        // record 路径形如 C:\rec\S1-<timestamp>.mp4
-        args.Should().Contain(a => a.StartsWith(@"C:\rec\S1-") && a.EndsWith(".mp4"));
+        // record 路径形如 <recDir>/S1-<timestamp>.mp4(跨平台用 Path.Combine 还原前缀)
+        var recPrefix = Path.Combine(recDir, "S1-");
+        args.Should().Contain(a => a.StartsWith(recPrefix) && a.EndsWith(".mp4"));
     }
 }
