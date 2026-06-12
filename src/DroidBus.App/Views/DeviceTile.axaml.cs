@@ -25,16 +25,21 @@ public partial class DeviceTile : UserControl
     /// 画面区域(供 X11 reparent 定位用)。
     public Control ScreenSurface => ScreenArea;
 
-    /// 画面区域在窗口坐标系中的像素区域(scrcpy 应填充此区域)。
-    public Rect ScreenRectInWindow
+    /// 画面区域在顶层窗口坐标系中的【物理像素】矩形(scrcpy 子窗口应填充此区域)。
+    /// 嵌入的原生窗口用物理像素定位,故需乘 RenderScaling。返回空矩形表示尚不可定位。
+    public PixelRect ScreenRectInWindowPx
     {
         get
         {
-            var topLevel = this.VisualRoot as Visual;
-            if (topLevel is null) return new Rect(0, 0, 0, 0);
-            var pos = ScreenArea.TranslatePoint(new Point(0, 0), topLevel);
-            if (pos is null) return new Rect(0, 0, 0, 0);
-            return new Rect(pos.Value.X, pos.Value.Y, ScreenArea.Bounds.Width, ScreenArea.Bounds.Height);
+            if (this.VisualRoot is not Visual root) return default;
+            var pos = ScreenArea.TranslatePoint(new Point(0, 0), root);
+            if (pos is null) return default;
+            var scale = (this.VisualRoot as TopLevel)?.RenderScaling ?? 1.0;
+            return new PixelRect(
+                (int)(pos.Value.X * scale),
+                (int)(pos.Value.Y * scale),
+                (int)(ScreenArea.Bounds.Width * scale),
+                (int)(ScreenArea.Bounds.Height * scale));
         }
     }
 

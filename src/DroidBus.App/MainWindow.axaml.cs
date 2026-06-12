@@ -43,6 +43,8 @@ public partial class MainWindow : Window
 
         Loaded += OnLoaded;
         Closing += (_, _) => Cleanup();
+        // 窗口尺寸/布局变化 → 重新定位所有嵌入的 scrcpy 窗口
+        TileGrid.LayoutUpdated += (_, _) => _mirror?.ResizeAll();
     }
 
     // ---- 初始化 --------------------------------------------------
@@ -77,9 +79,22 @@ public partial class MainWindow : Window
 
             TrySetWindowHandle();
             StatusText.Text = "就绪";
+
+            // 开发自检:DROIDBUS_AUTOMIRROR=1 时自动投屏首台;=all 时全部投屏。
+            var auto = Environment.GetEnvironmentVariable("DROIDBUS_AUTOMIRROR");
+            if (!string.IsNullOrEmpty(auto))
+            {
+                var targets = auto == "all"
+                    ? _tiles.Where(t => t.Device is { IsControllable: true })
+                    : _tiles.Where(t => t.Device is { IsControllable: true }).Take(1);
+                foreach (var t in targets)
+                    try { await _mirror.StartAsync(t, _globalOptions); }
+                    catch (Exception ex) { StatusText.Text = $"自动投屏失败:{ex.Message}"; }
+            }
         }
         catch (Exception ex)
         {
+            DebugLog.Write($"InitializeAsync 失败: {ex}");
             StatusText.Text = $"初始化失败:{ex.Message}";
         }
     }

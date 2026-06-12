@@ -15,4 +15,13 @@ public sealed class MacEmbedder : INativeWindowEmbedder
 
     public void Release(IntPtr child)
         => throw new PlatformNotSupportedException("macOS 窗口嵌入尚未实现。");
+
+    public IntPtr CreateEmbedContainer(IntPtr hostHandle, int x, int y, int width, int height)
+        => throw new PlatformNotSupportedException("macOS 窗口嵌入尚未实现。");
+
+    public void MoveResizeContainer(IntPtr container, int x, int y, int width, int height)
+        => throw new PlatformNotSupportedException("macOS 窗口嵌入尚未实现。");
+
+    public void DestroyContainer(IntPtr container)
+        => throw new PlatformNotSupportedException("macOS 窗口嵌入尚未实现。");
 }

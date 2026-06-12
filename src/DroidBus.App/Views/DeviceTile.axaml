@@ -1,7 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="DroidBus.App.Views.DeviceTile"
-             Width="440" Height="330">
+             HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
     <Border CornerRadius="6" BorderThickness="1" BorderBrush="#333" ClipToBounds="True">
         <Grid RowDefinitions="Auto,*">
             <!-- 设备信息栏 -->

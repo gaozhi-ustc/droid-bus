@@ -57,5 +57,12 @@ public sealed class Win32Embedder : INativeWindowEmbedder
 
     public void Release(IntPtr child) { /* 无需显式释放:parent 销毁时子窗跟着销毁 */ }
 
+    public IntPtr CreateEmbedContainer(IntPtr hostHandle, int x, int y, int width, int height)
+        => hostHandle;
+
+    public void MoveResizeContainer(IntPtr container, int x, int y, int width, int height) { }
+
+    public void DestroyContainer(IntPtr container) { }
+
     private sealed class FindCtx { public uint Pid; public string Title = ""; public IntPtr Found; }
 }

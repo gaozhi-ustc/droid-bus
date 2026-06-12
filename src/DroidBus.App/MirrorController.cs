@@ -61,6 +61,9 @@ public sealed class MirrorController : IDisposable
             host.Dispose();
             throw;
         }
+        // 嵌入后按 tile 在窗口里的矩形定位(StartAsync 在 UI 线程恢复,可安全读取布局)
+        var r = tile.ScreenRectInWindowPx;
+        if (r.Width > 0 && r.Height > 0) host.Resize(r.X, r.Y, r.Width, r.Height);
         _retries[dev.Serial] = 0;
     }
 
@@ -89,16 +92,16 @@ public sealed class MirrorController : IDisposable
         if (_hosts.Remove(serial, out var host)) host.Dispose();
     }
 
-    /// 对所有正在投屏的设备重新计算窗口尺寸。
+    /// 对所有正在投屏的设备按其 tile 在顶层窗口里的物理像素矩形重新定位/缩放。
     public void ResizeAll()
     {
         foreach (var (serial, host) in _hosts)
         {
-            if (_tileBySerial.TryGetValue(serial, out var tile))
+            if (_tileBySerial.TryGetValue(serial, out var tile) && tile.IsVisible)
             {
-                var w = (int)tile.Bounds.Width;
-                var h = (int)tile.Bounds.Height - 30;
-                if (w > 0 && h > 0) host.Resize(w, h);
+                var r = tile.ScreenRectInWindowPx;
+                if (r.Width > 0 && r.Height > 0)
+                    host.Resize(r.X, r.Y, r.Width, r.Height);
             }
         }
     }
