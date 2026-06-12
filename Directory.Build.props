@@ -1,0 +1,12 @@
+<Project>
+
+  <!-- 跨平台共享属性。各 csproj 仍可覆盖。 -->
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- 目标 RID(发布/打包时用);开发期 dotnet build 不强制。 -->
+    <RuntimeIdentifiers>win-x64;linux-x64;osx-x64;osx-arm64</RuntimeIdentifiers>
+  </PropertyGroup>
+
+</Project>

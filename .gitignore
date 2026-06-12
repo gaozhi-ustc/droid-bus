@@ -10,3 +10,11 @@ obj/
 
 # Per-user IDE files
 *.user
+
+# 运行时日志
+_broadcast.log
+
+# 平台二进制不进 git(体积大、平台相关);只保留每个目录的 README 说明
+tools/**/*
+!tools/**/README.md
+!tools/**/.gitkeep
