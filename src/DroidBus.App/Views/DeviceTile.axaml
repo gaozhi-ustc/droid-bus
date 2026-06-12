@@ -1,0 +1,20 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="DroidBus.App.Views.DeviceTile"
+             Width="440" Height="330">
+    <Border CornerRadius="6" BorderThickness="1" BorderBrush="#333" ClipToBounds="True">
+        <Grid RowDefinitions="Auto,*">
+            <!-- 设备信息栏 -->
+            <Border Grid.Row="0" Background="#1e2229" Padding="8,4">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Border Width="8" Height="8" CornerRadius="4" Name="StatusDot"
+                            Background="#555" VerticalAlignment="Center" />
+                    <TextBlock Name="SerialLabel" Text="--" Foreground="#ccd" FontSize="12" />
+                    <TextBlock Name="BatteryLabel" Text="" Foreground="#889" FontSize="11" />
+                </StackPanel>
+            </Border>
+            <!-- scrcpy 画面区域(通过 X11 reparent 到顶层窗口的 tile 对应坐标) -->
+            <Border Grid.Row="1" Name="ScreenArea" Background="#0a0d10" />
+        </Grid>
+    </Border>
+</UserControl>

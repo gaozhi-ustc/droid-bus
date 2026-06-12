@@ -1,20 +1,33 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <!-- 排除旧 WinForms 文件(保留在磁盘供 Avalonia 重写时参考)。新 Interop/Mirror 文件不受影响。 -->
+  <ItemGroup>
+    <Compile Remove="MainForm.cs" />
+    <Compile Remove="Grid\**\*.cs" />
+    <Compile Remove="Controls\**\*.cs" />
+    <Compile Remove="Input\**\*.cs" />
+    <Compile Remove="Scripting\**\*.cs" />
+    <Compile Remove="Interop\NativeMethods.cs" />
+    <Compile Remove="Mirror\ThumbnailPoller.cs" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\DroidBus.Core\DroidBus.Core.csproj" />
   </ItemGroup>
 
-  <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows</TargetFramework>
-    <Nullable>enable</Nullable>
-    <UseWindowsForms>true</UseWindowsForms>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <!-- scrcpy/SDL 是 DPI-unaware 进程。宿主若是 SystemAware/PerMonitor,嵌入的 scrcpy 子窗口
-         会被 DPI 虚拟化,客户区被冻结在初始纹理尺寸(528x1080),MoveWindow 放大外框时画面不跟随、
-         缩在左上角,导致广播坐标错位。宿主同样设为 DpiUnaware 后与 scrcpy 同处 96-DPI 空间,
-         嵌入画面才会随承载面板缩放铺满。 -->
-    <ApplicationHighDpiMode>DpiUnaware</ApplicationHighDpiMode>
-  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia"              Version="12.0.4" />
+    <PackageReference Include="Avalonia.Desktop"      Version="12.0.4" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.0.4" />
+    <PackageReference Include="Avalonia.Fonts.Inter"  Version="12.0.4" />
+    <!-- SkiaSharp 由 Avalonia.Skia 传递引入(12.0.4→3.119.4);应用级引用以供缩略图解码 -->
+  </ItemGroup>
 
 </Project>
