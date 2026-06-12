@@ -24,4 +24,10 @@ public interface INativeWindowEmbedder
 
     /// 销毁容器。
     void DestroyContainer(IntPtr container);
+
+    /// 隐藏容器(tile 不可见时调用)。
+    void HideContainer(IntPtr container);
+
+    /// 显示容器(tile 恢复可见时调用)。
+    void ShowContainer(IntPtr container);
 }

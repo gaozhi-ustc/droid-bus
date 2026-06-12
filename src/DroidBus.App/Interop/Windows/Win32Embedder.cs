@@ -64,5 +64,9 @@ public sealed class Win32Embedder : INativeWindowEmbedder
 
     public void DestroyContainer(IntPtr container) { }
 
+    public void HideContainer(IntPtr container) { }
+
+    public void ShowContainer(IntPtr container) { }
+
     private sealed class FindCtx { public uint Pid; public string Title = ""; public IntPtr Found; }
 }

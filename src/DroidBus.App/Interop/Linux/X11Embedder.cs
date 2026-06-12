@@ -76,6 +76,19 @@ public sealed class X11Embedder : INativeWindowEmbedder, IDisposable
         }
     }
 
+    public void HideContainer(IntPtr container)
+    {
+        XUnmapWindow(_display, container);
+        XFlush(_display);
+    }
+
+    public void ShowContainer(IntPtr container)
+    {
+        XMapWindow(_display, container);
+        XRaiseWindow(_display, container);
+        XFlush(_display);
+    }
+
     public IntPtr FindWindow(int processId, string title)
     {
         var found = IntPtr.Zero;
@@ -218,6 +231,7 @@ public sealed class X11Embedder : INativeWindowEmbedder, IDisposable
     [DllImport(LibX11)] private static extern IntPtr XInternAtom(IntPtr display, string name, bool onlyIfExists);
     [DllImport(LibX11)] private static extern int XReparentWindow(IntPtr display, IntPtr window, IntPtr parent, int x, int y);
     [DllImport(LibX11)] private static extern int XMapWindow(IntPtr display, IntPtr window);
+    [DllImport(LibX11)] private static extern int XUnmapWindow(IntPtr display, IntPtr window);
     [DllImport(LibX11)] private static extern int XRaiseWindow(IntPtr display, IntPtr window);
     [DllImport(LibX11)] private static extern int XFlush(IntPtr display);
     [DllImport(LibX11)] private static extern int XSync(IntPtr display, bool discard);

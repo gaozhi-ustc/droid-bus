@@ -22,6 +22,7 @@ public sealed class MirrorController : IDisposable
     /// 顶层窗口的平台句柄(Windows=HWND, Linux=X11 Window),由 MainWindow 设置。
     public IntPtr WindowHandle { get; set; }
 
+    /// 崩溃重启回调(在 UI 线程上调用)。
     public Func<string, Task>? RestartRequested { get; set; }
 
     public MirrorController(BinaryLocator bin, INativeWindowEmbedder embedder, int devW, int devH)
@@ -44,11 +45,10 @@ public sealed class MirrorController : IDisposable
         _hosts[dev.Serial] = host;
         _tileBySerial[dev.Serial] = tile;
 
-        // 若顶层窗口句柄已就绪,立即传给 host(否则等 resize 时再传)
         if (WindowHandle != IntPtr.Zero)
             host.SetHostHandle(WindowHandle);
 
-        host.Crashed += async code => await HandleCrashAsync(dev.Serial);
+        host.Crashed += code => OnHostCrashed(dev.Serial, code);
 
         try
         {
@@ -61,21 +61,33 @@ public sealed class MirrorController : IDisposable
             host.Dispose();
             throw;
         }
-        // 嵌入后按 tile 在窗口里的矩形定位(StartAsync 在 UI 线程恢复,可安全读取布局)
         var r = tile.ScreenRectInWindowPx;
         if (r.Width > 0 && r.Height > 0) host.Resize(r.X, r.Y, r.Width, r.Height);
         _retries[dev.Serial] = 0;
     }
 
-    private async Task HandleCrashAsync(string serial)
+    private void OnHostCrashed(string serial, int code)
     {
+        DebugLog.Write($"MirrorController: host crashed serial={serial} code={code}");
         if (!_hosts.ContainsKey(serial)) return;
         var n = _retries.GetValueOrDefault(serial);
         if (n >= MaxRetries) return;
         _retries[serial] = n + 1;
-        _hosts.Remove(serial, out var dead); dead?.Dispose();
-        await Task.Delay(500 * (n + 1));
-        if (RestartRequested is not null) await RestartRequested(serial);
+        _hosts.Remove(serial, out var dead);
+        dead?.Dispose();
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(500 * (n + 1));
+                if (RestartRequested is not null)
+                    await RestartRequested(serial);
+            }
+            catch (Exception ex)
+            {
+                DebugLog.Write($"MirrorController: restart failed serial={serial}: {ex.Message}");
+            }
+        });
     }
 
     public async Task RestartAsync(DeviceTile tile, MirrorOptions options)
@@ -93,16 +105,23 @@ public sealed class MirrorController : IDisposable
     }
 
     /// 对所有正在投屏的设备按其 tile 在顶层窗口里的物理像素矩形重新定位/缩放。
+    /// 不可见的 tile 的容器会被隐藏,可见的会被显示并重定位。
     public void ResizeAll()
     {
         foreach (var (serial, host) in _hosts)
         {
-            if (_tileBySerial.TryGetValue(serial, out var tile) && tile.IsVisible)
+            if (!_tileBySerial.TryGetValue(serial, out var tile)) continue;
+
+            if (!tile.IsVisible)
             {
-                var r = tile.ScreenRectInWindowPx;
-                if (r.Width > 0 && r.Height > 0)
-                    host.Resize(r.X, r.Y, r.Width, r.Height);
+                host.Hide();
+                continue;
             }
+
+            host.Show();
+            var r = tile.ScreenRectInWindowPx;
+            if (r.Width > 0 && r.Height > 0)
+                host.Resize(r.X, r.Y, r.Width, r.Height);
         }
     }
 

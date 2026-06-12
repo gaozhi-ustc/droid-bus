@@ -24,4 +24,10 @@ public sealed class MacEmbedder : INativeWindowEmbedder
 
     public void DestroyContainer(IntPtr container)
         => throw new PlatformNotSupportedException("macOS 窗口嵌入尚未实现。");
+
+    public void HideContainer(IntPtr container)
+        => throw new PlatformNotSupportedException("macOS 窗口嵌入尚未实现。");
+
+    public void ShowContainer(IntPtr container)
+        => throw new PlatformNotSupportedException("macOS 窗口嵌入尚未实现。");
 }

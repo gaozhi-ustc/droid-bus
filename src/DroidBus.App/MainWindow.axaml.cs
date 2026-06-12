@@ -22,7 +22,7 @@ public partial class MainWindow : Window
     private INativeWindowEmbedder _embedder = null!;
     private CancellationTokenSource? _pollCts;
     private MirrorOptions _globalOptions = new();
-    private DeviceTile? _focusedTile;              // 放大中的 tile
+    private DeviceTile? _focusedTile;
     private readonly List<DeviceTile> _tiles = new(6);
     private const int DeviceW = 1440;
     private const int DeviceH = 2960;
@@ -31,7 +31,6 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
 
-        // 填充 3×2 网格(6 格)
         for (var i = 0; i < 6; i++)
         {
             var tile = new DeviceTile();
@@ -43,7 +42,6 @@ public partial class MainWindow : Window
 
         Loaded += OnLoaded;
         Closing += (_, _) => Cleanup();
-        // 窗口尺寸/布局变化 → 重新定位所有嵌入的 scrcpy 窗口
         TileGrid.LayoutUpdated += (_, _) => _mirror?.ResizeAll();
     }
 
@@ -63,12 +61,19 @@ public partial class MainWindow : Window
             _devices = new DeviceManager(new AdbClient(new ProcessRunner(), _bin.Adb));
             _mirror = new MirrorController(_bin, _embedder, DeviceW, DeviceH);
             _mirror.RestartRequested = serial =>
-            {
-                var tile = _tiles.FirstOrDefault(t => t.Device?.Serial == serial);
-                if (tile is not null)
-                    Dispatcher.UIThread.Post(async () => await _mirror.StartAsync(tile, _globalOptions));
-                return Task.CompletedTask;
-            };
+                Dispatcher.UIThread.InvokeAsync(async () =>
+                {
+                    try
+                    {
+                        var tile = _tiles.FirstOrDefault(t => t.Device?.Serial == serial);
+                        if (tile is not null)
+                            await _mirror.StartAsync(tile, _globalOptions);
+                    }
+                    catch (Exception ex)
+                    {
+                        DebugLog.Write($"Restart failed for {serial}: {ex.Message}");
+                    }
+                });
 
             _devices.DeviceChanged += OnDeviceChanged;
             await _devices.RefreshAsync();
@@ -80,7 +85,6 @@ public partial class MainWindow : Window
             TrySetWindowHandle();
             StatusText.Text = "就绪";
 
-            // 开发自检:DROIDBUS_AUTOMIRROR=1 时自动投屏首台;=all 时全部投屏。
             var auto = Environment.GetEnvironmentVariable("DROIDBUS_AUTOMIRROR");
             if (!string.IsNullOrEmpty(auto))
             {
@@ -127,11 +131,9 @@ public partial class MainWindow : Window
     // ---- tile 点击 / 双击 ---------------------------------------
     private async void OnTileClicked(DeviceTile tile)
     {
-        // TODO: Ctrl+click 多选(后续 Task)
         foreach (var t in _tiles) t.Opacity = ReferenceEquals(t, tile) ? 1.0 : 0.7;
         SelectedInfo.Text = tile.Device?.Model ?? tile.Device?.Serial ?? "--";
 
-        // 按需投屏:点击即启动 scrcpy(已投屏则跳过)
         if (tile.Device is { IsControllable: true } dev && !_mirror.IsMirroring(dev.Serial))
         {
             try { await _mirror.StartAsync(tile, _globalOptions); }
@@ -150,22 +152,23 @@ public partial class MainWindow : Window
     private void FocusTile(DeviceTile focus)
     {
         _focusedTile = focus;
-        // 将其他 tile 缩成缩略条(后续 Task 实现完整布局切换)
         foreach (var t in _tiles.Where(t => !ReferenceEquals(t, focus)))
             t.IsVisible = false;
+        TileGrid.Rows = 1;
+        TileGrid.Columns = 1;
         _mirror.ResizeAll();
     }
 
     private void RestoreGrid()
     {
         _focusedTile = null;
+        TileGrid.Rows = 2;
+        TileGrid.Columns = 3;
         foreach (var t in _tiles) t.IsVisible = true;
         _mirror.ResizeAll();
     }
 
     // ---- 获得顶层窗口句柄 → 传给 MirrorController ---------------
-    /// 当平台原生窗口就绪时调用(通常在 Loaded 之后,由外部触发或在此轮询)。
-    /// 后续可通过 TopLevel.GetTopLevel(this)?.TryGetPlatformHandle() 获取句柄。
     private void TrySetWindowHandle()
     {
         if (_mirror.WindowHandle != IntPtr.Zero) return;
